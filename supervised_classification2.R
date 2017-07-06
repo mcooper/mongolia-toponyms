@@ -41,7 +41,7 @@ getWordNGrams <- function(str, n){
   mapply(substr, start=1:(len-(n-1)), stop=n:len, x=str)
 }
 
-getVectorNgrams <- function(vect, size=3){
+tableVectorNgrams <- function(vect, size=3){
   vect <- tolower(vect)
   
   vect <- sapply(vect, makeLastUpper)
@@ -50,9 +50,11 @@ getVectorNgrams <- function(vect, size=3){
 
   nGrams <- sapply(vect, getWordNGrams, n=size) %>% 
     unlist %>%
-    unique
+    table
   
-  return(nGrams)
+  df <- data.frame(gram=names(nGrams), freq=as.vector(nGrams/sum(nGrams)))
+  
+  return(df)
 }
 
 countMatch <- function(str, grams){
@@ -67,25 +69,26 @@ for(i in 1:nrow(trans)){
   mon$asciiname <- gsub(trans$mon[i], trans$inm[i], mon$asciiname)
 }
 
-mon_grams <- getVectorNgrams(mon$asciiname, 3)
-chn_grams <- getVectorNgrams(chn$asciiname, 3)
+mon_grams <- tableVectorNgrams(mon$asciiname, 3)
+chn_grams <- tableVectorNgrams(chn$asciiname, 3)
 
-mon_sel <- mon_grams[!mon_grams %in% chn_grams]
-chn_sel <- chn_grams[!chn_grams %in% mon_grams]
+all <- merge(mon_grams, chn_grams, by='gram', all=T)
+all[is.na(all)] <- 0
+
+mon_sel <- all$gram[all$freq.x > all$freq.y]
+chn_sel <- all$gram[all$freq.y > all$freq.x]
 
 inm <- read.csv('inner_mongolia.csv')
 inm$asciiname <- tolower(inm$asciiname)
 
-inm$mon_grams <- sapply(X=inm$asciiname, FUN=countMatch, grams=mon_grams)
-inm$chn_grams <- sapply(X=inm$asciiname, FUN=countMatch, grams=chn_grams)
 inm$mon_sel <- sapply(X=inm$asciiname, FUN=countMatch, grams=mon_sel)
 inm$chn_sel <- sapply(X=inm$asciiname, FUN=countMatch, grams=chn_sel)
 
-inm$class[inm$chn_grams > inm$mon_grams & inm$chn_sel > inm$mon_sel] <- 'Chinese'
-inm$class[inm$mon_grams > inm$chn_grams & inm$mon_sel > inm$chn_sel] <- 'Mongolian'
-inm$class[inm$mon_grams == inm$chn_grams & inm$mon_sel == inm$chn_sel] <- 'Tie'
+inm$class[inm$chn_sel > inm$mon_sel] <- 'Chinese'
+inm$class[inm$mon_sel > inm$chn_sel] <- 'Mongolian'
+inm$class[inm$mon_sel == inm$chn_sel] <- 'Tie'
 
-write.csv(inm, '../results/supervised.csv', row.names=F)
+write.csv(inm, '../results/supervised2.csv', row.names=F)
 
 
 
