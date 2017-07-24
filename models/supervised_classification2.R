@@ -75,8 +75,9 @@ chn_grams <- tableVectorNgrams(chn$asciiname, 3)
 all <- merge(mon_grams, chn_grams, by='gram', all=T)
 all[is.na(all)] <- 0
 
-mon_sel <- all$gram[all$freq.x > all$freq.y]
-chn_sel <- all$gram[all$freq.y > all$freq.x]
+mon_sel <- all[all$freq.x > all$freq.y,]
+chn_sel <- all[all$freq.y > all$freq.x,]
+names(mon_sel) <- c('gram', 'mon_freq', 'chn_freq')
 
 inm <- read.csv('inner_mongolia.csv')
 inm$asciiname <- tolower(inm$asciiname)
