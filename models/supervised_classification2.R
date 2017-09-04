@@ -77,13 +77,12 @@ all[is.na(all)] <- 0
 
 mon_sel <- all[all$freq.x > all$freq.y,]
 chn_sel <- all[all$freq.y > all$freq.x,]
-names(mon_sel) <- c('gram', 'mon_freq', 'chn_freq')
 
 inm <- read.csv('inner_mongolia.csv')
 inm$asciiname <- tolower(inm$asciiname)
 
-inm$mon_sel <- sapply(X=inm$asciiname, FUN=countMatch, grams=mon_sel)
-inm$chn_sel <- sapply(X=inm$asciiname, FUN=countMatch, grams=chn_sel)
+inm$mon_sel <- sapply(X=inm$asciiname, FUN=countMatch, grams=mon_sel$gram)
+inm$chn_sel <- sapply(X=inm$asciiname, FUN=countMatch, grams=chn_sel$gram)
 
 inm$class[inm$chn_sel > inm$mon_sel] <- 'Chinese'
 inm$class[inm$mon_sel > inm$chn_sel] <- 'Mongolian'
