@@ -29,3 +29,7 @@ result = pd.read_csv('results/supervised2.csv')
 comb = valid.merge(result, on=['geonameid'])
 
 ct = pd.crosstab(comb['class'], comb['true_class'])
+
+f = open('crosstab.txt', 'w')
+f.write(str(ct))
+f.close()
