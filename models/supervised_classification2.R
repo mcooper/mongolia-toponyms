@@ -61,6 +61,11 @@ countMatch <- function(str, grams){
   sum(sapply(X=grams, FUN=grepl, x=str))
 }
 
+showMatch <- function(str, grams){
+  match <- sapply(X=grams, FUN=grepl, x=str)
+  paste(names(match)[match], collapse=';')
+}
+
 mon$asciiname <- tolower(mon$asciiname)
 chn$asciiname <- tolower(chn$asciiname)
 
@@ -70,13 +75,17 @@ for(i in 1:nrow(trans)){
 }
 
 mon_grams <- tableVectorNgrams(mon$asciiname, 3)
+names(mon_grams)[2] <- 'mn_freq'
 chn_grams <- tableVectorNgrams(chn$asciiname, 3)
+names(chn_grams)[2] <- 'zh_freq'
 
 all <- merge(mon_grams, chn_grams, by='gram', all=T)
 all[is.na(all)] <- 0
 
-mon_sel <- all[all$freq.x > all$freq.y,]
-chn_sel <- all[all$freq.y > all$freq.x,]
+write.csv(all, '../results/mn_zh_3grams.csv', row.names=F)
+
+mon_sel <- all[all$mn_freq > all$zh_freq,]
+chn_sel <- all[all$zh_freq > all$mn_freq,]
 
 inm <- read.csv('inner_mongolia.csv')
 inm$asciiname <- tolower(inm$asciiname)
@@ -90,10 +99,19 @@ inm$class[inm$mon_sel == inm$chn_sel] <- 'Tie'
 
 write.csv(inm, '../results/supervised2.csv', row.names=F)
 
+##Add more detail
 
+inm$mon_grams <- sapply(X=inm$asciiname, FUN=showMatch, grams=mon_sel$gram)
+inm$chn_grams <- sapply(X=inm$asciiname, FUN=showMatch, grams=chn_sel$gram)
 
+sar_val <- read.csv('inner_mongolia_sample_skp_classified.csv')
+names(sar_val)[names(sar_val)!='geonameid'] <- paste0('sarala_', names(sar_val)[names(sar_val)!='geonameid'])
 
+has_val <- read.csv('inner_mongolia_sample_to_validate_Has_classified_clean.csv')
+names(has_val)[names(has_val)!='geonameid'] <- paste0('hasuntuya_', names(has_val)[names(has_val)!='geonameid'])
 
+inm <- Reduce(function(x,y){merge(x,y,all.x=T,all.y=F)}, list(inm, sar_val, has_val))
 
+write.csv(inm, '../results/supervised2_detailed.csv', row.names=F)
 
 
