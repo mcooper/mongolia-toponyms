@@ -1,5 +1,0 @@
-true_class  both  chinese  mongolian  other
-class                                      
-Chinese       11      106         22      2
-Mongolian      8        9         33      1
-Tie            0        4          4      0

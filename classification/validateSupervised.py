@@ -22,14 +22,21 @@ def f(row):
 valid['true_class'] = valid.apply(f, axis=1)
 del valid['asciiname']
 
+
 ##Read in model results
 result = pd.read_csv('results/supervised2.csv')
 
 
 comb = valid.merge(result, on=['geonameid'])
 
-ct = pd.crosstab(comb['class'], comb['true_class'])
+ct = pd.crosstab(comb['true_class'], comb['class'])
+ct['total'] = ct.sum(axis=1, numeric_only=True)
 
-f = open('crosstab.txt', 'w')
+right = ct.at['chinese', 'Chinese'] + ct.at['mongolian', "Mongolian"] + ct.at['both', 'Tie']
+total = ct['total'].sum()
+
+f = open('crosstab_sarala_data.txt', 'w')
 f.write(str(ct))
+f.write('\n\n' + str(float(right)/float(total)) + ' success rate')
 f.close()
+
